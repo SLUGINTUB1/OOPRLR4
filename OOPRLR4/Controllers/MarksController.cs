@@ -26,6 +26,94 @@ namespace OOPRLR4.Controllers
             return View(await oOPRLR4Context.ToListAsync());
         }
 
+        // GET: Marks/Group
+        //11. Продемонструвати групування даних за допомогою оператора group.
+        public IActionResult Group()
+        {
+
+            var marksCountByExam = _context.Mark.Include(m => m.Exam)
+                   .GroupBy(v => v.Value)
+                   .Select(g => new Mark
+                   {
+                       Value = g.Key,
+                       SubjectIdent = g.Count(a => a.ExamId!=0?true:false)
+                   }
+                   );
+
+            foreach (var m in marksCountByExam)
+            {
+                Console.WriteLine($"{m.Value}: {m.SubjectIdent}");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET:Marks/MarksLeftJoin
+        //18. Продемонструвати операції з множинами: різниця.
+        public IActionResult MarksLeftJoin()
+        {
+            var marks = _context.Mark;
+            var exams = _context.Exam;
+
+            var query = marks.GroupJoin(exams, mark => mark.ExamId, exam => exam.ExamId,
+               (mark, exam) => new { mark, subgroup = exam.DefaultIfEmpty() })
+               .Select(gj => new
+               {
+                   gj.mark.Value,
+                   exam = gj.subgroup.FirstOrDefault().Date
+               });
+
+
+            foreach (var v in query)
+            {
+                Console.WriteLine($"{v.Value}: {v.exam}");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        // GET: Marks/MarksFullJoin
+        //17. Продемонструвати з'єднання таблиць.
+        //18. Продемонструвати операції з множинами: об'єднання
+        //13. При формуванні запитів використати анонімні типи.
+        //1. Продемонструвати агрегатні операції
+        public IActionResult MarksFullJoin()
+        {
+            var marks = _context.Mark;
+            var exams = _context.Exam;
+
+            var queryLeftJoin = marks.GroupJoin(exams, mark => mark.ExamId, exam => exam.ExamId,
+               (mark, exam) => new { mark, subgroup = exam.DefaultIfEmpty() })
+               .Select(gj => new
+               {
+                   gj.mark.Value,
+                   exam = gj.subgroup.FirstOrDefault().Date
+               });
+
+            var queryRightJoin = exams.GroupJoin(marks, exam => exam.ExamId, mark => mark.ExamId,
+               (exam, mark) => new { exam, subgroup = mark.DefaultIfEmpty() })
+               .Select(gj => new
+               {
+                   gj.subgroup.FirstOrDefault().Value,
+                   exam = gj.exam.Date
+               });
+
+            var FullOuterJoin = queryRightJoin.Union(queryLeftJoin);
+
+            foreach (var v in FullOuterJoin)
+            {
+                Console.WriteLine($"{v.Value}: {v.exam}");
+            }
+
+            double averageGrade = _context.Mark.Average(t => t.Value);
+            Console.WriteLine($"Avarage mark: {averageGrade}");
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+
         // GET: Marks/Details/5
         public async Task<IActionResult> Details(int? id)
         {
