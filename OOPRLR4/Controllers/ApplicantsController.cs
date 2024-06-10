@@ -20,13 +20,20 @@ namespace OOPRLR4.Controllers
         }
 
         // GET: Applicants
+        //16. Продемонструвати сортування даних в таблицях
+        //12. Продемонструвати роботу оператора join
+        //18. Продемонструвати операції з множинами: перетин
+        //14. Сформувати запити засобами методів розширення
+        //15. Використати методи запитів при формуванні запитів до бази даних (наприклад,інформація про студента з максимальною / мінімальною оцінкою).
         public async Task<IActionResult> Index()
         {
-            var oOPRLR4Context = _context.Applicant.Include(a => a.Exam);
+            var oOPRLR4Context = _context.Applicant.Include(a => a.Exam).OrderBy(a => a.Name);
             return View(await oOPRLR4Context.ToListAsync());
         }
 
+
         // GET: Applicants/Details/5
+        //10. Використовуючи оператор where забезпечити відображення інформації, відібраної за певним критерієм
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,8 +41,10 @@ namespace OOPRLR4.Controllers
                 return NotFound();
             }
 
+
             var applicant = await _context.Applicant
                 .Include(a => a.Exam)
+                .Where(m => m.ApplicantId == id)
                 .FirstOrDefaultAsync(m => m.ApplicantId == id);
             if (applicant == null)
             {
